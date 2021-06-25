@@ -1,24 +1,62 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Switch, Route, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import Country from "./Components/Country";
+import SearchBar from "./Components/SearchBar";
+import SearchResults from "./Components/SearchResults";
+import DropDownMenu from "./Components/DropDownMenu";
+
+import "./App.css";
 
 function App() {
+  const [countries, setCountries] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [region, setRegion] = useState("Europe");
+
+  const allCountriesUrl = "https://restcountries.eu/rest/v2/all";
+
+  async function fetchAllCountries() {
+    const resp = await fetch(allCountriesUrl);
+    const data = await resp.json();
+    console.log(data);
+    setCountries(data);
+  }
+
+  useEffect(() => {
+    fetchAllCountries();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Switch>
+        <Route
+          exact
+          path="/"
+          component={() => <Link to="/all">Go to countries</Link>}
+        />
+        <Route path="/search/:query" component={SearchResults} />
+        <Route
+          path="/all"
+          component={() => (
+            <>
+              <SearchBar
+                setSearchQuery={setSearchQuery}
+                searchQuery={searchQuery}
+              />
+              <DropDownMenu setRegion={setRegion} region={region} />
+              <div style={{ display: "flex", flexWrap: "wrap" }}>
+                {countries.map((n, i) =>
+                  region == "All" || n.region == region ? (
+                    <Country info={n} />
+                  ) : (
+                    ""
+                  )
+                )}
+              </div>
+            </>
+          )}
+        />
+      </Switch>
+    </BrowserRouter>
   );
 }
 
